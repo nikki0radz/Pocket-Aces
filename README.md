@@ -10,6 +10,8 @@ GitHub Pages can serve the root of `main` directly. All URLs are relative, so th
 
 ## Included
 
+- Collect a unique card on each module’s first completion, with a Pip celebration and card reveal. My pocket → My deck shows all 52 slots and earned-card details. Existing completed modules receive their cards automatically. Replays and daily practice do not grant extra cards. The ten current modules award ten cards; future modules will make the remaining cards available. Collection derives from saved completion IDs, so reloads cannot duplicate rewards. Resetting progress also resets the deck.
+
 - Ten bite-sized lessons: the deck, red suits, black suits, reading cards, rank order, pairs, private/shared cards, flop/turn/river, actions, and simple five-card hand comparisons.
 - Explain first, test second. Every concept must be correctly answered to unlock the next lesson. Mistakes show explanations and switch to another example; other mastered concepts remain saved.
 - Four original generated Pip expressions, integrated as a transparent CSS sprite sheet.

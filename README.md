@@ -30,6 +30,23 @@ is optional. Session history stays in memory; only player-name and voice setting
 are stored locally. Pocket Aces does not save a video or audio recording. API inputs
 are subject to [OpenAI's retention policies](https://developers.openai.com/api/docs/guides/your-data).
 
+## Interactive Triton screenshot
+
+Open **Watch → Your Triton screenshot** (or `#screenshot`). The supplied original
+image is displayed with 88 responsive, labelled tap regions over every meaningful
+part of the hand. Pip gives a short concrete explanation first, with optional
+extra detail, arithmetic and device speech. Every occurrence of BB/SB/D can be
+tapped repeatedly, including faded rows. Repeated taps never consume or disable
+an explanation. Bigger text buttons and image zoom are available on phones.
+
+The optional 17-step walkthrough follows the recorded action. Amounts distinguish
+remaining chips, total bets, additional chips, rounded pot size and net gain.
+It explains the uncalled final 75K and does not invent either player’s private
+cards. This is authored teaching for the supplied screenshot, available offline
+without OpenAI calls. The source image is preserved; only browser CSS crops out
+phone/browser chrome for display. Explanations and geometry are in `triton-hand.js`.
+Local development also offers `/__mobile` for a 390px-wide screenshot preview.
+
 ## OpenAI connection
 
 The production host needs `OPENAI_API_KEY` as a **server-only secret**. Use the

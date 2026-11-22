@@ -1,6 +1,6 @@
 import {readFile,mkdir,writeFile,rm} from 'node:fs/promises';
-const files=['index.html','app.js','styles.css','data.js','engine.js','collection.js','spectator.js','spectator.css','watch.js','watch.css','watch-core.js','sw.js','manifest.webmanifest','assets/icon.svg','assets/pip-cat-expressions.png'];
-const types={html:'text/html; charset=utf-8',js:'text/javascript; charset=utf-8',css:'text/css; charset=utf-8',webmanifest:'application/manifest+json',svg:'image/svg+xml',png:'image/png',apk:'application/vnd.android.package-archive'};
+const files=['index.html','app.js','styles.css','data.js','engine.js','collection.js','spectator.js','spectator.css','watch.js','watch.css','watch-core.js','sw.js','manifest.webmanifest','assets/icon.svg','assets/pip-cat-expressions.png','triton.js','triton-hand.js','triton.css','assets/triton-owen-hand.jpg'];
+const types={html:'text/html; charset=utf-8',js:'text/javascript; charset=utf-8',css:'text/css; charset=utf-8',webmanifest:'application/manifest+json',svg:'image/svg+xml',png:'image/png',jpg:'image/jpeg',apk:'application/vnd.android.package-archive'};
 const assets={};
 try {await readFile('downloads/Pocket-Aces-0.3.0.apk');files.push('downloads/Pocket-Aces-0.3.0.apk');}catch{}
 for(const file of files){const data=await readFile(file);assets['/'+file]={data:data.toString('base64'),type:types[file.split('.').at(-1)]||'application/octet-stream'};}

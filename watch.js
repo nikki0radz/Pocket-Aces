@@ -1,3 +1,4 @@
+import {screenshotLink} from './triton.js';
 import {DEMO, INITIAL_STATE, MAX_FRAMES, SESSION_MS, newLines, youtubeId} from './watch-core.js';
 
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -18,6 +19,7 @@ function notice(text){const el=$('#pip-notice');if(el){el.textContent=text;el.hi
 export function watchView(){return `<section id="pip-watch-root" class="pip-watch">
   <button class="text-button" data-nav="learn">Back to Learn</button>
   <div class="page-heading"><div><p class="eyebrow">YOUR PATIENT POKER PAL</p><h1>Watch with Pip</h1><p>You watch the game. I’ll make it make sense.</p></div><div class="pip happy pip-heading" role="img" aria-label="Pip"></div></div>
+  ${screenshotLink()}
   <div class="pip-mobile-actions"><button class="primary" data-pip="demo">Try practice</button><button class="secondary" data-pip="live">Share a game</button></div>
   <div class="pip-watch-layout"><div class="pip-view-column">
     <section class="pip-screen" aria-label="Your game"><div id="pip-video-area" class="pip-video-area"><div class="pip-screen-welcome"><span aria-hidden="true">♠ ♥ ♣ ♦</span><h2>Big table. Tiny explanations.</h2><p>Try a little practice game, or let me watch a stream with you.</p></div></div><div class="pip-screen-footer"><span id="pip-source">No game playing yet</span><span id="pip-status" role="status">Ready when you are</span></div></section>

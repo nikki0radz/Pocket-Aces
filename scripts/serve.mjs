@@ -6,6 +6,10 @@ const args=process.argv.slice(2);const portArg=args.indexOf('--port');
 const port=Number(process.env.PORT||(portArg>=0?args[portArg+1]:3000));
 http.createServer(async(req,res)=>{
   try{
+    if(req.url==='/__mobile'){
+      res.writeHead(200,{'content-type':'text/html; charset=utf-8'});
+      res.end('<!doctype html><meta name="viewport" content="width=device-width"><title>Pocket Aces phone preview</title><body style="margin:0;background:#d4dace;display:flex;justify-content:center;padding:20px"><iframe title="Phone preview" src="/#screenshot" style="width:390px;height:844px;border:0;background:white;border-radius:20px"></iframe>');return;
+    }
     const chunks=[];for await(const c of req)chunks.push(c);
     const headers=new Headers(req.headers);headers.set('oai-authenticated-user-id','local-preview');
     const request=new Request('http://'+req.headers.host+req.url,{method:req.method,headers,...(!['GET','HEAD'].includes(req.method)?{body:Buffer.concat(chunks)}:{})});

@@ -1,34 +1,93 @@
 # Pocket Aces
 
-A mobile-friendly, beginner-first Texas Hold’em learning app, starring Pip the cat. First playable draft.
+Beginner-first poker lessons with Pip, plus a continuous broadcast companion.
 
-## Run
+## Watch with Pip (0.3.0)
 
-No installation or build required. Serve the repository root with `python3 -m http.server 3000`, then open http://localhost:3000. Run meaningful progression checks with `npm test` (Node 18+).
+Open **Watch** in the app. **Try practice** plays an explicitly labelled, authored
+12-event hand automatically, with concrete explanations, optional device speech,
+pause/stop controls and a running story. No OpenAI account or screen sharing is
+needed for practice. It never pretends to analyse a real stream.
 
-GitHub Pages can serve the root of `main` directly. All URLs are relative, so this works at `/Pocket-Aces/` and on a custom domain. `.nojekyll` prevents unnecessary Jekyll processing.
+For a real stream, start **Share a game with Pip**. Desktop Chrome/Edge can share
+a video tab, including its audio when available. The [Android test APK](https://pocket-aces.nikki0radz.chatgpt.site/downloads/Pocket-Aces-0.3.0.apk) adds Android's explicit app-sharing permission and a draggable Pip
+overlay, with pause/stop buttons and a foreground notification. It shares pictures
+only in this first Android prototype; broadcast audio transcription is supported
+in desktop browsers when the selected source provides audio. Protected video or
+audio remains protected. Only share content you are entitled to process.
 
-## Included
+Live mode collects changed table views, batches up to six chronological JPEGs,
+and sends a bounded recent history and running state through the private server.
+It follows meaningful changes automatically; questions are optional. Pip explains
+unfamiliar terms immediately, reports uncertainty, and does not infer unseen
+bets, winners, faces, financial profits or off-camera tournament results.
 
-- Collect a unique card on each module’s first completion, with a Pip celebration and card reveal. My pocket → My deck shows all 52 slots and earned-card details. Existing completed modules receive their cards automatically. Replays and daily practice do not grant extra cards. The ten current modules award ten cards; future modules will make the remaining cards available. Collection derives from saved completion IDs, so reloads cannot duplicate rewards. Resetting progress also resets the deck.
+Each session stops after 30 minutes. Pause stops new analysis; Stop releases the
+capture, timers and queued audio, and aborts the client request. Navigation away
+also stops sharing. An already submitted provider request may finish. No scheduled
+jobs, pre-generation or idle API activity are configured. Browser-owned speech
+is optional. Session history stays in memory; only player-name and voice settings
+are stored locally. Pocket Aces does not save a video or audio recording. API inputs
+are subject to [OpenAI's retention policies](https://developers.openai.com/api/docs/guides/your-data).
 
-- Ten bite-sized lessons: the deck, red suits, black suits, reading cards, rank order, pairs, private/shared cards, flop/turn/river, actions, and simple five-card hand comparisons.
-- Explain first, test second. Every concept must be correctly answered to unlock the next lesson. Mistakes show explanations and switch to another example; other mastered concepts remain saved.
-- Four original generated Pip expressions, integrated as a transparent CSS sprite sheet.
-- A daily question drawn only from the current fully taught lesson. Completed topics are excluded. Before teaching, the learner is directed to the lesson; after the final lesson, the daily pool is empty. Daily practice does not skip lesson tests.
-- Searchable dictionary, hand-ranking reference, optional replay of completed lessons, motion setting, and explicit reset confirmation.
-- Versioned browser-local progress and offline assets via service worker. No account, analytics, ads, or real-money play.
+## OpenAI connection
 
-## Deliberately not connected in this draft
+The production host needs `OPENAI_API_KEY` as a **server-only secret**. Use the
+OpenAI Developers connection and its API-key setup workflow; never put a key in
+browser JavaScript, an APK, GitHub Pages, this repository or a chat message.
+Optional model overrides are documented in `.env.example`. Default models are
+`gpt-4.1-mini` for image interpretation and `gpt-4o-mini-transcribe` for shared
+broadcast audio. Status requests do not call OpenAI; missing credentials block
+live analysis with an honest connection message.
 
-The notification preview is a visual demonstration only. There are no scheduled notifications, Android overlay permission requests, background jobs or native APK yet. A future Android wrapper should call the same current-level question selector and refresh eligibility whenever progress changes. Scheduling and optional overlays need separate native implementation and explicit device permissions.
+Live routes require the hosting platform's authenticated user identity,
+same-origin access and an expiring, signed session token bound to that user.
+Request size, frame order and bounded history are validated. Per-isolate request
+limits supplement the private Site access boundary; these are not a distributed
+billing cap. Configure a provider spending limit before real-stream testing.
+No live OpenAI request has been tested until the account connection is configured.
 
-Pip’s hints are authored explanations, not live AI. Open-ended questions should later use a server-side OpenAI integration; never put an API key into static JavaScript or commit it. Friends’ mini-games are deferred.
+## Run and test
 
-## Files
+Node 20+; no npm dependencies are required.
 
-`data.js`: lessons, question variants and dictionary. `engine.js`: progress, gating and daily selection. `app.js`: interface and interactions. `styles.css`: responsive design. `assets/pip-cat-expressions.png`: generated mascot sheet (happy/thinking/celebrate/surprised in a 2×2 grid). `tests/engine.test.mjs`: progression regression checks.
+- `npm test` checks lessons, rewards, table rules, demo chip conservation, image
+  validation, API identity, signed sessions and provider failure handling.
+- `npm run check` checks JavaScript syntax.
+- `npm run dev -- --port 3000` builds and serves a local preview. Local preview
+  intentionally has no live provider credentials.
+- `npm run build` builds a dependency-free Worker at `dist/server/index.js`,
+  preserving all existing static lessons and assets. `.openai/hosting.json` retains
+  the existing Pocket Aces Site identity and private audience.
 
-## Limits
+GitHub Pages can still serve the root for lessons and practice. Live AI needs the
+private server at https://pocket-aces.nikki0radz.chatgpt.site, not static Pages.
 
-Progress is only on the current browser/device and can be lost if browser storage is cleared. This is an introductory trail, not a complete poker strategy course. Individual rank comparisons are distinguished from full five-card hand comparisons. No automatic tournament/video interpretation is implemented.
+## Android test build
+
+Set `ANDROID_JAR` and `ANDROID_BUILD_TOOLS` to official Android SDK 35 paths, then
+run `python3 scripts/build-android.py`. It produces `downloads/Pocket-Aces-0.3.0.apk`.
+The app targets Android 15, supports Android 8+, and loads the same private hosted
+app, including its normal sign-in. Screen sharing needs its OpenAI connection.
+
+The native bridge uses an origin-targeted WebMessagePort to the trusted main page,
+not a JavaScript interface exposed to embedded video frames. No API keys are in
+the APK. Android capture is a foreground service with explicit projection consent,
+no restart on kill, no saved media, and an independent 30-minute stop. Signing
+material is ignored by Git and backed up privately; retain it for installable
+updates. Build/signature checks do not establish real-device behaviour. Test the
+sign-in, overlay permission, YouTube capture and background callbacks on a phone.
+
+## Existing learning app
+
+Ten bite-sized lessons introduce cards, suits, rank order, pairs, shared/private
+cards, actions and simple hand comparisons. Concepts must be taught and correctly
+answered before progressing. First-time lesson completion earns a unique card;
+replays and daily practice do not duplicate rewards. Progress and the card deck
+remain local to this browser/device. The manual **Follow a table** guide is still
+available under Learn. Learning content, dictionary and card collection work
+offline after first load. Scheduled daily notifications remain a future feature.
+
+Pip's original transparent mascot artwork is preserved. Main UI: `app.js`,
+`styles.css`; continuous companion: `watch.js`, `watch.css`; shared rules and
+teaching instructions: `watch-core.js`; private API: `worker/index.js`.

@@ -9,6 +9,7 @@ let mounted=false,connected=null,mode='idle',paused=false,run=0,stream=null,vide
 let frames=[],history=[],tableState={...INITIAL_STATE},transcripts=[],token='',expiresAt=0,startedAt=0,lastSent=0,lastCaptured=0;
 let sampleTimer=null,analyseTimer=null,expiryTimer=null,demoTimer=null,recorderTimer=null,recorder=null,audioBusy=false,busy=false,controller=null;
 let demoIndex=-1,lastUncertainty='',lastLine='',question='',previousImage='',skipped=0,sourceHasAudio=false,pendingNative=null,nativeWaitTimer=null;
+let designWasWatching=false;
 let player='',voice=false,videoId='',demoSpeed=9500;
 try{const prefs=JSON.parse(localStorage.getItem('pocket-pip-prefs')||'{}');player=String(prefs.player||'').slice(0,80);voice=!!prefs.voice;}catch{}
 const active=()=>mode==='live'||mode==='demo';
@@ -61,8 +62,8 @@ async function updateConnection(){
   try{const r=await fetch('/api/pip/status',{cache:'no-store'});if(!r.ok)throw new Error();connected=!!(await r.json()).connected;}catch{connected=false;}
   const p=$('#pip-connection');if(!p)return;
   if(location.hostname==='nikki0radz.github.io'){p.innerHTML='Practice works here. For live sharing, <a href="https://pocket-aces.nikki0radz.chatgpt.site/#watch">open the hosted Pocket Aces app</a>.';return;}
-  if(!connected)p.innerHTML='Live Pip needs its OpenAI connection. The practice game works now.'+(!native()?' <a href="https://pocket-aces.nikki0radz.chatgpt.site/downloads/Pocket-Aces-0.3.0.apk">Get the Android test app</a>.':'');
-  else if(!canShare())p.innerHTML='For screen sharing on your phone, use the <a href="https://pocket-aces.nikki0radz.chatgpt.site/downloads/Pocket-Aces-0.3.0.apk">Pocket Aces Android app</a>. On a laptop, use Chrome or Edge.';
+  if(!connected)p.innerHTML='Live Pip needs its OpenAI connection. The practice game works now.'+(!native()?' <a href="https://pocket-aces.nikki0radz.chatgpt.site/downloads/Pocket-Aces-0.3.1.apk">Get the Android test app</a>.':'');
+  else if(!canShare())p.innerHTML='For screen sharing on your phone, use the <a href="https://pocket-aces.nikki0radz.chatgpt.site/downloads/Pocket-Aces-0.3.1.apk">Pocket Aces Android app</a>. On a laptop, use Chrome or Edge.';
   else p.textContent='Live Pip is connected. Choose your video tab or app when you start. Live watching uses API credits only while a session is running.';
 }
 function setControls(){
@@ -106,7 +107,7 @@ function stop(message='Pip has stopped watching. Your screen is no longer shared
 function loadVideo(value){
   const id=youtubeId(value);if(!id){notice('That doesn’t look like a YouTube video link. Try copying the link from Share in YouTube.');return;}
   if(active()||mode==='starting')stop('');videoId=id;
-  $('#pip-video-area').innerHTML=`<iframe src="https://www.youtube.com/embed/${id}?playsinline=1&autoplay=1" title="Your YouTube video" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>`;
+  $('#pip-video-area').innerHTML=`<iframe src="https://www.youtube.com/embed/${id}?playsinline=1&autoplay=1&enablejsapi=1" title="Your YouTube video" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>`;
   $('#pip-source').textContent='Your YouTube video';notice('Video loaded. Press “Share a game with Pip” and select this tab or app to let him watch.');
 }
 function demoCard(card){return `<span class="pip-demo-card ${'♥♦'.includes(card.slice(-1))?'red':''}">${esc(card)}</span>`;}
@@ -232,3 +233,8 @@ window.pipNativeEvent=(event)=>{
 };
 window.addEventListener('pip-native-ready',()=>{if(mounted)updateConnection();});
 window.addEventListener('pagehide',()=>{if(active()||mode==='starting')stop('');});
+
+window.addEventListener('pocket-aces-design-mode',event=>{
+  if(event.detail.active){designWasWatching=active()&&!paused;if(designWasWatching)togglePause();}
+  else if(designWasWatching){designWasWatching=false;if(active()&&paused)togglePause();}
+});

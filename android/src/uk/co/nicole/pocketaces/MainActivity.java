@@ -10,12 +10,15 @@ import android.webkit.*;
 import android.widget.*;
 import java.lang.ref.WeakReference;
 import java.util.UUID;
+import java.io.OutputStream;
+import java.nio.charset.StandardCharsets;
 import org.json.*;
 
 public class MainActivity extends Activity {
   static final String HOME="https://pocket-aces.nikki0radz.chatgpt.site";
   static WeakReference<MainActivity> current=new WeakReference<>(null);
   WebView web; WebMessagePort port; String pendingSession=""; boolean trusted=false;
+  ValueCallback<Uri[]> fileChooser; String pendingDesignJson=null;
   @Override public void onCreate(Bundle state){
     super.onCreate(state);current=new WeakReference<>(this);
     web=new WebView(this);setContentView(web);
@@ -23,7 +26,14 @@ public class MainActivity extends Activity {
     settings.setMediaPlaybackRequiresUserGesture(false);settings.setMixedContentMode(WebSettings.MIXED_CONTENT_NEVER_ALLOW);
     settings.setAllowFileAccess(false);settings.setAllowContentAccess(false);
     CookieManager.getInstance().setAcceptCookie(true);CookieManager.getInstance().setAcceptThirdPartyCookies(web,true);
-    web.setWebChromeClient(new WebChromeClient());
+    web.setWebChromeClient(new WebChromeClient(){
+      @Override public boolean onShowFileChooser(WebView view,ValueCallback<Uri[]> callback,FileChooserParams options){
+        if(!trusted||!isHome(view.getUrl()))return false;
+        if(fileChooser!=null)fileChooser.onReceiveValue(null);fileChooser=callback;
+        try{startActivityForResult(options.createIntent(),43);}catch(Exception e){fileChooser.onReceiveValue(null);fileChooser=null;}
+        return true;
+      }
+    });
     web.setWebViewClient(new WebViewClient(){
       @Override public void onPageStarted(WebView view,String url,android.graphics.Bitmap icon){
         trusted=isHome(url);if(port!=null){port.close();port=null;}
@@ -53,11 +63,27 @@ public class MainActivity extends Activity {
         if(action.equals("stop"))stopService(new Intent(MainActivity.this,CaptureService.class));
         if(action.equals("explain")&&CaptureService.running!=null)CaptureService.running.explain(data.optString("text"),data.optBoolean("voice"));
         if(action.equals("pause")&&CaptureService.running!=null)CaptureService.running.pause(data.optBoolean("paused"));
+        if(action.equals("exportDesignNotes"))saveDesignNotes(data.optString("json"),data.optString("filename"));
       }catch(Exception ignored){}
     }});
     String channel="pocket-pip-"+UUID.randomUUID();
-    String js="(function(){function receive(e){if(e.data!=="+JSONObject.quote(channel)+"||!e.ports.length)return;window.removeEventListener('message',receive);var p=e.ports[0];p.onmessage=function(m){try{window.pipNativeEvent(JSON.parse(m.data));}catch(e){}};function send(a){p.postMessage(JSON.stringify(a));}window.PocketAcesAndroid={startCapture:function(s){send({action:'start',session:s});},stopCapture:function(){send({action:'stop'});},showExplanation:function(t,v){send({action:'explain',text:t,voice:v});},setPaused:function(v){send({action:'pause',paused:v});}};window.dispatchEvent(new Event('pip-native-ready'));}window.addEventListener('message',receive);})();";
+    String js="(function(){function receive(e){if(e.data!=="+JSONObject.quote(channel)+"||!e.ports.length)return;window.removeEventListener('message',receive);var p=e.ports[0];p.onmessage=function(m){try{var d=JSON.parse(m.data);if(window.pipNativeEvent)window.pipNativeEvent(d);window.dispatchEvent(new CustomEvent('pocket-aces-native',{detail:d}));}catch(e){}};function send(a){p.postMessage(JSON.stringify(a));}window.PocketAcesAndroid={startCapture:function(s){send({action:'start',session:s});},stopCapture:function(){send({action:'stop'});},showExplanation:function(t,v){send({action:'explain',text:t,voice:v});},setPaused:function(v){send({action:'pause',paused:v});},exportDesignNotes:function(j,f){send({action:'exportDesignNotes',json:j,filename:f});}};window.dispatchEvent(new Event('pip-native-ready'));}window.addEventListener('message',receive);})();";
     web.evaluateJavascript(js,unused->web.postWebMessage(new WebMessage(channel,new WebMessagePort[]{ports[1]}),Uri.parse(HOME)));
+  }
+  void saveDesignNotes(String json,String filename){
+    if(pendingDesignJson!=null){designExportResult(false,false);return;}
+    try{
+      if(json.length()>1500000)throw new Exception();
+      JSONObject parsed=new JSONObject(json);
+      if(!"Pocket Aces".equals(parsed.optString("app"))||parsed.optJSONArray("notes")==null)throw new Exception();
+      if(!filename.matches("pocket-aces-design-notes-[A-Za-z0-9_-]+\\.json"))throw new Exception();
+      pendingDesignJson=json;
+      Intent save=new Intent(Intent.ACTION_CREATE_DOCUMENT).addCategory(Intent.CATEGORY_OPENABLE).setType("application/json").putExtra(Intent.EXTRA_TITLE,filename);
+      startActivityForResult(save,44);
+    }catch(Exception e){pendingDesignJson=null;designExportResult(false,false);}
+  }
+  void designExportResult(boolean saved,boolean cancelled){
+    try{JSONObject message=new JSONObject();message.put("type","design-export");message.put("saved",saved);message.put("cancelled",cancelled);send(message);}catch(Exception ignored){}
   }
   void beginCapture(){
     if(!Settings.canDrawOverlays(this)){
@@ -69,6 +95,14 @@ public class MainActivity extends Activity {
     startActivityForResult(manager.createScreenCaptureIntent(),42);
   }
   @Override protected void onActivityResult(int request,int result,Intent data){super.onActivityResult(request,result,data);
+    if(request==43){if(fileChooser!=null){fileChooser.onReceiveValue(WebChromeClient.FileChooserParams.parseResult(result,data));fileChooser=null;}return;}
+    if(request==44){
+      String json=pendingDesignJson;pendingDesignJson=null;
+      if(result!=RESULT_OK||data==null||data.getData()==null){designExportResult(false,true);return;}
+      try(OutputStream output=getContentResolver().openOutputStream(data.getData(),"wt")){
+        if(json==null||output==null)throw new Exception();output.write(json.getBytes(StandardCharsets.UTF_8));designExportResult(true,false);
+      }catch(Exception e){designExportResult(false,false);}return;
+    }
     if(request==41){if(Settings.canDrawOverlays(this))beginCapture();else sendError("Permission to show Pip wasn’t allowed. Nothing is being shared.");}
     if(request==42){if(result!=RESULT_OK||data==null){sendError("Screen sharing wasn’t allowed. Nothing is being shared.");return;}
       Intent service=new Intent(this,CaptureService.class).putExtra("result",result).putExtra("data",data).putExtra("session",pendingSession);startForegroundService(service);
@@ -78,5 +112,5 @@ public class MainActivity extends Activity {
   void send(JSONObject data){runOnUiThread(()->{if(port!=null&&trusted&&isHome(web.getUrl()))try{port.postMessage(new WebMessage(data.toString()));}catch(Exception ignored){}});}
   static void deliver(JSONObject data){MainActivity activity=current.get();if(activity!=null)activity.send(data);}
   @Override public void onBackPressed(){if(web.canGoBack())web.goBack();else super.onBackPressed();}
-  @Override protected void onDestroy(){stopService(new Intent(this,CaptureService.class));if(port!=null)port.close();web.destroy();if(current.get()==this)current.clear();super.onDestroy();}
+  @Override protected void onDestroy(){stopService(new Intent(this,CaptureService.class));if(fileChooser!=null)fileChooser.onReceiveValue(null);pendingDesignJson=null;if(port!=null)port.close();web.destroy();if(current.get()==this)current.clear();super.onDestroy();}
 }

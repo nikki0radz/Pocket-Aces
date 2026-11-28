@@ -1,12 +1,12 @@
 {
   "name": "pocket-aces",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "private": true,
   "type": "module",
   "scripts": {
     "test": "node --test tests/*.test.mjs",
     "build": "node scripts/build.mjs",
     "dev": "node scripts/serve.mjs",
-    "check": "node --check app.js && node --check watch.js && node --check watch-core.js && node --check worker/index.js && node --check sw.js && node --check triton.js && node --check triton-hand.js"
+    "check": "node --check app.js && node --check watch.js && node --check watch-core.js && node --check worker/index.js && node --check sw.js && node --check triton.js && node --check triton-hand.js && node --check design-review.js && node --check design-notes.js"
   }
 }

@@ -10,7 +10,7 @@ pause/stop controls and a running story. No OpenAI account or screen sharing is
 needed for practice. It never pretends to analyse a real stream.
 
 For a real stream, start **Share a game with Pip**. Desktop Chrome/Edge can share
-a video tab, including its audio when available. The [Android test APK](https://pocket-aces.nikki0radz.chatgpt.site/downloads/Pocket-Aces-0.3.0.apk) adds Android's explicit app-sharing permission and a draggable Pip
+a video tab, including its audio when available. The [Android test APK](https://pocket-aces.nikki0radz.chatgpt.site/downloads/Pocket-Aces-0.3.1.apk) adds Android's explicit app-sharing permission and a draggable Pip
 overlay, with pause/stop buttons and a foreground notification. It shares pictures
 only in this first Android prototype; broadcast audio transcription is supported
 in desktop browsers when the selected source provides audio. Protected video or
@@ -29,6 +29,20 @@ jobs, pre-generation or idle API activity are configured. Browser-owned speech
 is optional. Session history stays in memory; only player-name and voice settings
 are stored locally. Pocket Aces does not save a video or audio recording. API inputs
 are subject to [OpenAI's retention policies](https://developers.openai.com/api/docs/guides/your-data).
+
+## Design review mode (0.3.1)
+
+The Design mode switch at the top freezes page interaction and motion. Tap a
+place to add a note; pins reopen notes for editing or deletion. Notes persist in
+browser storage across pages and reloads. Export JSON contains all notes, page
+routes, readable target labels, selectors, tap positions and viewport sizes.
+Screen captures, API credentials and query parameters are not included.
+
+The Android build uses the system Save file picker for JSON exports; the browser
+uses a normal download. Cancelling export retains every note. Turning off Design
+mode restores the page and any practice game that it paused. The release is
+signed with the original Pocket Aces certificate so it can update the first APK.
+The APK loads the hosted app; it needs a connection for initial sign-in and load.
 
 ## Interactive Triton screenshot
 
@@ -83,7 +97,7 @@ private server at https://pocket-aces.nikki0radz.chatgpt.site, not static Pages.
 ## Android test build
 
 Set `ANDROID_JAR` and `ANDROID_BUILD_TOOLS` to official Android SDK 35 paths, then
-run `python3 scripts/build-android.py`. It produces `downloads/Pocket-Aces-0.3.0.apk`.
+run `python3 scripts/build-android.py`. It produces `downloads/Pocket-Aces-0.3.1.apk`.
 The app targets Android 15, supports Android 8+, and loads the same private hosted
 app, including its normal sign-in. Screen sharing needs its OpenAI connection.
 

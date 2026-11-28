@@ -8,6 +8,8 @@ import android.os.*;
 import android.provider.Settings;
 import android.webkit.*;
 import android.widget.*;
+import android.view.*;
+import android.graphics.Color;
 import java.lang.ref.WeakReference;
 import java.util.UUID;
 import java.io.OutputStream;
@@ -33,7 +35,28 @@ public class MainActivity extends Activity {
       JSONArray files=new JSONArray(new String(bytes.toByteArray(),StandardCharsets.UTF_8));
       for(int i=0;i<files.length();i++)bundledAssets.add(files.getString(i));
     }catch(Exception e){new AlertDialog.Builder(this).setTitle("Pocket Aces needs reinstalling").setMessage("The app's learning pages are missing. Please install the latest APK.").setPositiveButton("Close",(d,w)->finish()).show();return;}
-    web=new WebView(this);setContentView(web);
+    // Own the system-bar area so Android 15 cannot place page controls under it.
+    final int paper=Color.rgb(251,247,239);
+    getWindow().setStatusBarColor(paper);getWindow().setNavigationBarColor(paper);
+    if(Build.VERSION.SDK_INT>=29)getWindow().setNavigationBarContrastEnforced(false);
+    if(Build.VERSION.SDK_INT>=30)getWindow().setDecorFitsSystemWindows(false);
+    else getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LAYOUT_STABLE|View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN|View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION|View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR|View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR);
+    FrameLayout root=new FrameLayout(this);root.setBackgroundColor(paper);
+    root.setOnApplyWindowInsetsListener((view,insets)->{
+      if(Build.VERSION.SDK_INT>=30){
+        android.graphics.Insets bars=insets.getInsets(WindowInsets.Type.systemBars()|WindowInsets.Type.displayCutout());
+        int keyboard=insets.getInsets(WindowInsets.Type.ime()).bottom;
+        view.setPadding(bars.left,bars.top,bars.right,Math.max(bars.bottom,keyboard));
+        return WindowInsets.CONSUMED;
+      }
+      view.setPadding(insets.getSystemWindowInsetLeft(),insets.getSystemWindowInsetTop(),insets.getSystemWindowInsetRight(),insets.getSystemWindowInsetBottom());
+      return insets.consumeSystemWindowInsets();
+    });
+    web=new WebView(this);web.setBackgroundColor(paper);root.addView(web,new FrameLayout.LayoutParams(-1,-1));setContentView(root);root.requestApplyInsets();
+    if(Build.VERSION.SDK_INT>=30){
+      WindowInsetsController bars=getWindow().getInsetsController();
+      if(bars!=null)bars.setSystemBarsAppearance(WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS|WindowInsetsController.APPEARANCE_LIGHT_NAVIGATION_BARS,WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS|WindowInsetsController.APPEARANCE_LIGHT_NAVIGATION_BARS);
+    }
     WebSettings settings=web.getSettings();settings.setJavaScriptEnabled(true);settings.setDomStorageEnabled(true);
     settings.setMediaPlaybackRequiresUserGesture(false);settings.setMixedContentMode(WebSettings.MIXED_CONTENT_NEVER_ALLOW);
     settings.setAllowFileAccess(false);settings.setAllowContentAccess(false);
@@ -68,7 +91,7 @@ public class MainActivity extends Activity {
       @Override public void onReceivedSslError(WebView view,android.webkit.SslErrorHandler handler,android.net.http.SslError error){handler.cancel();Toast.makeText(MainActivity.this,"The secure connection failed. Please try again later.",Toast.LENGTH_LONG).show();}
     });
     web.setDownloadListener((url,ua,disposition,mime,length)->{try{startActivity(new Intent(Intent.ACTION_VIEW,Uri.parse(url)));}catch(Exception ignored){}});
-    web.loadUrl(HOME+"/#watch");
+    web.loadUrl(HOME+"/#home");
   }
   boolean isHome(String url){return BundledContent.isHome(url);}
   WebResourceResponse bundledResponse(String url,String method){

@@ -10,7 +10,7 @@ pause/stop controls and a running story. No OpenAI account or screen sharing is
 needed for practice. It never pretends to analyse a real stream.
 
 For a real stream, start **Share a game with Pip**. Desktop Chrome/Edge can share
-a video tab, including its audio when available. The [Android test APK](https://pocket-aces.nikki0radz.chatgpt.site/downloads/Pocket-Aces-0.3.2.apk) adds Android's explicit app-sharing permission and a draggable Pip
+a video tab, including its audio when available. The [Android test APK](https://pocket-aces.nikki0radz.chatgpt.site/downloads/Pocket-Aces-0.3.3.apk) adds Android's explicit app-sharing permission and a draggable Pip
 overlay, with pause/stop buttons and a foreground notification. It shares pictures
 only in this first Android prototype; broadcast audio transcription is supported
 in desktop browsers when the selected source provides audio. Protected video or
@@ -44,6 +44,18 @@ mode restores the page and any practice game that it paused. The release is
 signed with the original Pocket Aces certificate so it can update the first APK.
 From 0.3.2, the APK bundles the learning pages and opens directly without Google
 or ChatGPT sign-in. The hosted website keeps its existing private access.
+
+## Android layout and random rewards (0.3.3)
+
+The native container applies status-bar, navigation-bar, camera-cutout and keyboard
+insets, keeping the page below Android's system controls. System-bar backgrounds
+match the app and use dark icons. It opens on Home rather than Watch.
+
+New module rewards are drawn from the unused deck and saved with progress. The
+first reward is a random number card; later rewards can include faces and aces.
+Previously earned rewards remain unchanged, including migration from the original
+fixed ace rewards. Replays and daily questions never redraw a card. The collection
+is displayed from 2 through ace within each suit.
 
 ## Direct-open Android app (0.3.2)
 
@@ -118,7 +130,7 @@ private server at https://pocket-aces.nikki0radz.chatgpt.site, not static Pages.
 ## Android test build
 
 Set `ANDROID_JAR` and `ANDROID_BUILD_TOOLS` to official Android SDK 35 paths, then
-run `python3 scripts/build-android.py`. It produces `downloads/Pocket-Aces-0.3.2.apk`.
+run `python3 scripts/build-android.py`. It produces `downloads/Pocket-Aces-0.3.3.apk`.
 The app targets Android 15, supports Android 8+, and opens the bundled app without
 sign-in. The shared `scripts/app-assets.json` defines the hosted and native files.
 Screen sharing needs a separately configured OpenAI connection.

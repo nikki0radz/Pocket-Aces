@@ -63,8 +63,8 @@ async function updateConnection(){
   const p=$('#pip-connection');if(!p)return;
   if(location.hostname==='appassets.androidplatform.net'){p.textContent='Live AI isn’t connected in this app yet. Lessons, practice and the screenshot guide work without signing in.';return;}
   if(location.hostname==='nikki0radz.github.io'){p.innerHTML='Practice works here. For live sharing, <a href="https://pocket-aces.nikki0radz.chatgpt.site/#watch">open the hosted Pocket Aces app</a>.';return;}
-  if(!connected)p.innerHTML='Live Pip needs its OpenAI connection. The practice game works now.'+(!native()?' <a href="https://pocket-aces.nikki0radz.chatgpt.site/downloads/Pocket-Aces-0.3.2.apk">Get the Android test app</a>.':'');
-  else if(!canShare())p.innerHTML='For screen sharing on your phone, use the <a href="https://pocket-aces.nikki0radz.chatgpt.site/downloads/Pocket-Aces-0.3.2.apk">Pocket Aces Android app</a>. On a laptop, use Chrome or Edge.';
+  if(!connected)p.innerHTML='Live Pip needs its OpenAI connection. The practice game works now.'+(!native()?' <a href="https://pocket-aces.nikki0radz.chatgpt.site/downloads/Pocket-Aces-0.3.3.apk">Get the Android test app</a>.':'');
+  else if(!canShare())p.innerHTML='For screen sharing on your phone, use the <a href="https://pocket-aces.nikki0radz.chatgpt.site/downloads/Pocket-Aces-0.3.3.apk">Pocket Aces Android app</a>. On a laptop, use Chrome or Edge.';
   else p.textContent='Live Pip is connected. Choose your video tab or app when you start. Live watching uses API credits only while a session is running.';
 }
 function setControls(){

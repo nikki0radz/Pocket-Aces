@@ -1,11 +1,13 @@
 import {lessons} from './data.js';
+import {awardCard,restoreRewards} from './collection.js';
 export const storageKey='pocket-aces-v1';
-export const emptyState=()=>({version:1,completed:[],seen:{},mastery:{},attempts:{},daily:{},days:[],quietMotion:false});
+export const emptyState=()=>({version:1,completed:[],rewards:{},seen:{},mastery:{},attempts:{},daily:{},days:[],quietMotion:false});
 export function normalizeState(raw){
  const s=emptyState(); if(!raw || raw.version!==1)return s;
  const list=Array.isArray(raw.completed)?raw.completed:[];
  // Only a contiguous sequence can be complete; discard inconsistent data safely.
  for(const l of lessons){if(list.includes(l.id))s.completed.push(l.id);else break;}
+ s.rewards=restoreRewards(s.completed,raw.rewards);
  for(const l of lessons){s.seen[l.id]=Math.max(0,Math.min(l.pages.length,Number(raw.seen?.[l.id])||0));s.mastery[l.id]=Array.isArray(raw.mastery?.[l.id])?l.concepts.filter(c=>raw.mastery[l.id].includes(c.id)).map(c=>c.id):[];}
  s.attempts=raw.attempts&&typeof raw.attempts==='object'?raw.attempts:{};
  s.daily=raw.daily&&typeof raw.daily==='object'?raw.daily:{};
@@ -20,7 +22,7 @@ export function recordAnswer(s,l,conceptId,correct){
  if(!isTaught(s,l)||!l.concepts.some(c=>c.id===conceptId))return false;
  const key=l.id+':'+conceptId;s.attempts[key]=(Number(s.attempts[key])||0)+1;
  s.mastery[l.id]??=[];if(correct&&!s.mastery[l.id].includes(conceptId))s.mastery[l.id].push(conceptId);
- if(l.concepts.every(c=>s.mastery[l.id].includes(c.id))&&lessons[currentIndex(s)]?.id===l.id){s.completed.push(l.id);return true;}return false;
+ if(l.concepts.every(c=>s.mastery[l.id].includes(c.id))&&lessons[currentIndex(s)]?.id===l.id){s.completed.push(l.id);awardCard(s,l.id);return true;}return false;
 }
 export function nextQuestion(s,l){const c=l.concepts.find(x=>!s.mastery[l.id]?.includes(x.id));if(!c)return null;const attempt=Number(s.attempts[l.id+':'+c.id])||0;return {...c.variants[attempt%c.variants.length],conceptId:c.id};}
 export function localDay(date=new Date()){const pad=n=>String(n).padStart(2,'0');return `${date.getFullYear()}-${pad(date.getMonth()+1)}-${pad(date.getDate())}`;}

@@ -27,7 +27,7 @@ for relative in web_files:
 (BUILD/'assets/web-files.json').write_text(json.dumps(web_files))
 def run(*args):subprocess.run([str(a) for a in args],cwd=ROOT,check=True)
 run(TOOLS/'aapt2','compile','--dir',ROOT/'android/res','-o',BUILD/'resources.zip')
-run(TOOLS/'aapt2','link','-o',BUILD/'base.apk','-I',JAR,'--manifest',ROOT/'android/AndroidManifest.xml','-A',BUILD/'assets','--java',BUILD/'generated','--min-sdk-version','26','--target-sdk-version','35','--version-code','3','--version-name','0.3.2',BUILD/'resources.zip')
+run(TOOLS/'aapt2','link','-o',BUILD/'base.apk','-I',JAR,'--manifest',ROOT/'android/AndroidManifest.xml','-A',BUILD/'assets','--java',BUILD/'generated','--min-sdk-version','26','--target-sdk-version','35','--version-code','4','--version-name','0.3.3',BUILD/'resources.zip')
 sources=sorted((ROOT/'android/src').rglob('*.java'))+sorted((BUILD/'generated').rglob('*.java'))
 run('java','-m','jdk.compiler/com.sun.tools.javac.Main','-source','8','-target','8','-classpath',JAR,'-encoding','UTF-8','-d',BUILD/'classes',*sources)
 run(TOOLS/'d8','--lib',JAR,'--min-api','26','--output',BUILD/'dex',*sorted((BUILD/'classes').rglob('*.class')))
@@ -41,7 +41,7 @@ if not key.exists():
     run('keytool','-genkeypair','-keystore',key,'-storetype','PKCS12','-alias','pocket-aces','-storepass:file',password,'-keypass:file',password,'-keyalg','RSA','-keysize','3072','-validity','10000','-dname','CN=Pocket Aces, OU=Nicole, O=Personal App, C=GB')
     key.chmod(0o600)
 if not password.exists():raise SystemExit('Restore the private signing password before building an update.')
-downloads=ROOT/'downloads';downloads.mkdir(exist_ok=True);apk=downloads/'Pocket-Aces-0.3.2.apk'
+downloads=ROOT/'downloads';downloads.mkdir(exist_ok=True);apk=downloads/'Pocket-Aces-0.3.3.apk'
 run(TOOLS/'apksigner','sign','--ks',key,'--ks-key-alias','pocket-aces','--ks-pass','file:'+str(password),'--out',apk,BUILD/'aligned.apk')
 run(TOOLS/'apksigner','verify','--verbose',apk)
-print(json.dumps({'apk':str(apk),'bytes':apk.stat().st_size,'version':'0.3.2'}))
+print(json.dumps({'apk':str(apk),'bytes':apk.stat().st_size,'version':'0.3.3'}))

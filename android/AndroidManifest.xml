@@ -4,7 +4,7 @@
   <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PROJECTION"/>
   <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW"/>
   <application android:label="Pocket Aces" android:theme="@android:style/Theme.Material.Light.NoActionBar" android:icon="@drawable/pip_icon" android:usesCleartextTraffic="false" android:allowBackup="false">
-    <activity android:name=".MainActivity" android:exported="true" android:launchMode="singleTask" android:configChanges="orientation|screenSize|keyboardHidden">
+    <activity android:name=".MainActivity" android:exported="true" android:launchMode="singleTask" android:windowSoftInputMode="adjustResize" android:configChanges="orientation|screenSize|keyboardHidden">
       <intent-filter><action android:name="android.intent.action.MAIN"/><category android:name="android.intent.category.LAUNCHER"/></intent-filter>
     </activity>
     <service android:name=".CaptureService" android:exported="false" android:foregroundServiceType="mediaProjection"/>

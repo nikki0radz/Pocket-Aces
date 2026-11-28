@@ -47,7 +47,7 @@ document.addEventListener('change',e=>{if(e.target.dataset.setup)updateSpectator
 document.addEventListener('keydown',e=>{const m=$('.modal');if(!m)return;if(e.key==='Escape'){closeModal();return;}if(e.key==='Tab'){const focusable=[...m.querySelectorAll('button,input,select,a[href],summary')].filter(x=>!x.disabled);const first=focusable[0],last=focusable.at(-1);if(e.shiftKey&&(document.activeElement===first||document.activeElement===m)){e.preventDefault();last?.focus();}else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first?.focus();}}});
 window.addEventListener('hashchange',()=>{const next=location.hash.slice(1);if(next===route)return;if(['home','learn','dictionary','pocket','deck','table','watch','screenshot'].includes(next)&&!(next==='learn'&&route==='lesson')){route=next;closeModal();render(true);}});
 route=['home','learn','dictionary','pocket','deck','table','watch','screenshot'].includes(location.hash.slice(1))?location.hash.slice(1):'home';render();
-if('serviceWorker' in navigator)navigator.serviceWorker.register('./sw.js').catch(()=>{});
+if(location.hostname!=='appassets.androidplatform.net'&&'serviceWorker' in navigator)navigator.serviceWorker.register('./sw.js').catch(()=>{});
 
 function deckSummary(){const owned=collectedCards(state);return `<button class="deck-summary" data-nav="deck"><span class="deck-emblem" aria-hidden="true">♠</span><span><span class="eyebrow">YOUR CARD LIBRARY</span><strong>My deck</strong><small>${owned.length?`${owned.length} little wins, yours to keep.`:'Your first card is one module away.'}</small></span><span class="deck-count">${owned.length}<small>/ 52</small></span><span aria-hidden="true">→</span></button>`;}
 function deckView(){

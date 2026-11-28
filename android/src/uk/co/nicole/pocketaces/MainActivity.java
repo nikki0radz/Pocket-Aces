@@ -11,16 +11,28 @@ import android.widget.*;
 import java.lang.ref.WeakReference;
 import java.util.UUID;
 import java.io.OutputStream;
+import java.io.InputStream;
+import java.io.ByteArrayInputStream;
 import java.nio.charset.StandardCharsets;
+import java.util.HashSet;
+import java.util.Collections;
+import java.util.Set;
 import org.json.*;
 
 public class MainActivity extends Activity {
-  static final String HOME="https://pocket-aces.nikki0radz.chatgpt.site";
+  static final String HOME=BundledContent.ORIGIN;
+  final Set<String> bundledAssets=new HashSet<>();
   static WeakReference<MainActivity> current=new WeakReference<>(null);
   WebView web; WebMessagePort port; String pendingSession=""; boolean trusted=false;
   ValueCallback<Uri[]> fileChooser; String pendingDesignJson=null;
   @Override public void onCreate(Bundle state){
     super.onCreate(state);current=new WeakReference<>(this);
+    try(InputStream input=getAssets().open("web-files.json")){
+      java.io.ByteArrayOutputStream bytes=new java.io.ByteArrayOutputStream();byte[] buffer=new byte[4096];int size;
+      while((size=input.read(buffer))!=-1)bytes.write(buffer,0,size);
+      JSONArray files=new JSONArray(new String(bytes.toByteArray(),StandardCharsets.UTF_8));
+      for(int i=0;i<files.length();i++)bundledAssets.add(files.getString(i));
+    }catch(Exception e){new AlertDialog.Builder(this).setTitle("Pocket Aces needs reinstalling").setMessage("The app's learning pages are missing. Please install the latest APK.").setPositiveButton("Close",(d,w)->finish()).show();return;}
     web=new WebView(this);setContentView(web);
     WebSettings settings=web.getSettings();settings.setJavaScriptEnabled(true);settings.setDomStorageEnabled(true);
     settings.setMediaPlaybackRequiresUserGesture(false);settings.setMixedContentMode(WebSettings.MIXED_CONTENT_NEVER_ALLOW);
@@ -35,6 +47,10 @@ public class MainActivity extends Activity {
       }
     });
     web.setWebViewClient(new WebViewClient(){
+      @Override public WebResourceResponse shouldInterceptRequest(WebView view,WebResourceRequest req){
+        if(!"appassets.androidplatform.net".equals(req.getUrl().getHost()))return null;
+        return bundledResponse(req.getUrl().toString(),req.getMethod());
+      }
       @Override public void onPageStarted(WebView view,String url,android.graphics.Bitmap icon){
         trusted=isHome(url);if(port!=null){port.close();port=null;}
         if(!trusted&&CaptureService.running!=null)stopService(new Intent(MainActivity.this,CaptureService.class));
@@ -42,16 +58,33 @@ public class MainActivity extends Activity {
       @Override public void onPageFinished(WebView view,String url){if(isHome(url))connectBridge();}
       @Override public boolean shouldOverrideUrlLoading(WebView view,WebResourceRequest req){
         if(!req.isForMainFrame())return false;
-        Uri uri=req.getUrl();String host=uri.getHost()==null?"":uri.getHost();
-        if(uri.toString().startsWith(HOME)||host.equals("chatgpt.com")||host.endsWith(".openai.com")||host.equals("auth0.openai.com")||host.equals("accounts.google.com"))return false;
-        try{startActivity(new Intent(Intent.ACTION_VIEW,uri));}catch(Exception ignored){}return true;
+        Uri uri=req.getUrl();
+        if(isHome(uri.toString()))return false;
+        // Account sign-in and external sites belong in the user's normal browser.
+        if("https".equals(uri.getScheme())||"http".equals(uri.getScheme()))
+          try{startActivity(new Intent(Intent.ACTION_VIEW,uri));}catch(Exception ignored){}
+        return true;
       }
       @Override public void onReceivedSslError(WebView view,android.webkit.SslErrorHandler handler,android.net.http.SslError error){handler.cancel();Toast.makeText(MainActivity.this,"The secure connection failed. Please try again later.",Toast.LENGTH_LONG).show();}
     });
     web.setDownloadListener((url,ua,disposition,mime,length)->{try{startActivity(new Intent(Intent.ACTION_VIEW,Uri.parse(url)));}catch(Exception ignored){}});
     web.loadUrl(HOME+"/#watch");
   }
-  boolean isHome(String url){try{return "https".equals(Uri.parse(url).getScheme())&&"pocket-aces.nikki0radz.chatgpt.site".equals(Uri.parse(url).getHost());}catch(Exception e){return false;}}
+  boolean isHome(String url){return BundledContent.isHome(url);}
+  WebResourceResponse bundledResponse(String url,String method){
+    if(!isHome(url))return localResponse("text/plain",403,"Forbidden","This address is unavailable.");
+    if(!"GET".equals(method))return localResponse("application/json",503,"Unavailable","{\"error\":\"Live Pip is not connected in the offline app yet.\"}");
+    if("/api/pip/status".equals(Uri.parse(url).getPath()))
+      return localResponse("application/json",200,"OK","{\"connected\":false,\"offlineApp\":true}");
+    String file=BundledContent.resolve(url,bundledAssets);
+    if(file==null)return localResponse("text/plain",404,"Not Found","This page isn't included in Pocket Aces.");
+    String mime=file.endsWith(".html")?"text/html":file.endsWith(".js")?"text/javascript":file.endsWith(".css")?"text/css":file.endsWith(".json")||file.endsWith(".webmanifest")?"application/json":file.endsWith(".svg")?"image/svg+xml":file.endsWith(".png")?"image/png":file.endsWith(".jpg")?"image/jpeg":"application/octet-stream";
+    try{return new WebResourceResponse(mime,"UTF-8",200,"OK",Collections.singletonMap("X-Content-Type-Options","nosniff"),getAssets().open("web/"+file));}
+    catch(Exception e){return localResponse("text/plain",404,"Not Found","This page is missing. Please update Pocket Aces.");}
+  }
+  WebResourceResponse localResponse(String mime,int status,String reason,String body){
+    return new WebResourceResponse(mime,"UTF-8",status,reason,Collections.singletonMap("Cache-Control","no-store"),new ByteArrayInputStream(body.getBytes(StandardCharsets.UTF_8)));
+  }
   void connectBridge(){
     if(!trusted||!isHome(web.getUrl()))return;
     WebMessagePort[] ports=web.createWebMessageChannel();port=ports[0];
@@ -112,5 +145,5 @@ public class MainActivity extends Activity {
   void send(JSONObject data){runOnUiThread(()->{if(port!=null&&trusted&&isHome(web.getUrl()))try{port.postMessage(new WebMessage(data.toString()));}catch(Exception ignored){}});}
   static void deliver(JSONObject data){MainActivity activity=current.get();if(activity!=null)activity.send(data);}
   @Override public void onBackPressed(){if(web.canGoBack())web.goBack();else super.onBackPressed();}
-  @Override protected void onDestroy(){stopService(new Intent(this,CaptureService.class));if(fileChooser!=null)fileChooser.onReceiveValue(null);pendingDesignJson=null;if(port!=null)port.close();web.destroy();if(current.get()==this)current.clear();super.onDestroy();}
+  @Override protected void onDestroy(){stopService(new Intent(this,CaptureService.class));if(fileChooser!=null)fileChooser.onReceiveValue(null);pendingDesignJson=null;if(port!=null)port.close();if(web!=null)web.destroy();if(current.get()==this)current.clear();super.onDestroy();}
 }

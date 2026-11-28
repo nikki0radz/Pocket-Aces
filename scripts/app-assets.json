@@ -1,0 +1,7 @@
+[
+  "index.html", "app.js", "styles.css", "data.js", "engine.js", "collection.js",
+  "spectator.js", "spectator.css", "watch.js", "watch.css", "watch-core.js",
+  "sw.js", "manifest.webmanifest", "assets/icon.svg", "assets/pip-cat-expressions.png",
+  "triton.js", "triton-hand.js", "triton.css", "design-review.js", "design-review.css",
+  "design-notes.js", "assets/triton-owen-hand.jpg"
+]

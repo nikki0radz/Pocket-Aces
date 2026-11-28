@@ -17,9 +17,17 @@ BUILD=ROOT/'android/build'
 if BUILD.exists():shutil.rmtree(BUILD)
 for folder in ['assets','generated','classes','dex']:(BUILD/folder).mkdir(parents=True)
 shutil.copy2(ROOT/'assets/pip-cat-expressions.png',BUILD/'assets/pip.png')
+web_files=json.loads((ROOT/'scripts/app-assets.json').read_text())
+for relative in web_files:
+    source=ROOT/relative
+    if not source.is_file() or ROOT.resolve() not in source.resolve().parents:
+        raise SystemExit('Invalid bundled page: '+relative)
+    target=BUILD/'assets/web'/relative;target.parent.mkdir(parents=True,exist_ok=True)
+    shutil.copy2(source,target)
+(BUILD/'assets/web-files.json').write_text(json.dumps(web_files))
 def run(*args):subprocess.run([str(a) for a in args],cwd=ROOT,check=True)
 run(TOOLS/'aapt2','compile','--dir',ROOT/'android/res','-o',BUILD/'resources.zip')
-run(TOOLS/'aapt2','link','-o',BUILD/'base.apk','-I',JAR,'--manifest',ROOT/'android/AndroidManifest.xml','-A',BUILD/'assets','--java',BUILD/'generated','--min-sdk-version','26','--target-sdk-version','35','--version-code','2','--version-name','0.3.1',BUILD/'resources.zip')
+run(TOOLS/'aapt2','link','-o',BUILD/'base.apk','-I',JAR,'--manifest',ROOT/'android/AndroidManifest.xml','-A',BUILD/'assets','--java',BUILD/'generated','--min-sdk-version','26','--target-sdk-version','35','--version-code','3','--version-name','0.3.2',BUILD/'resources.zip')
 sources=sorted((ROOT/'android/src').rglob('*.java'))+sorted((BUILD/'generated').rglob('*.java'))
 run('java','-m','jdk.compiler/com.sun.tools.javac.Main','-source','8','-target','8','-classpath',JAR,'-encoding','UTF-8','-d',BUILD/'classes',*sources)
 run(TOOLS/'d8','--lib',JAR,'--min-api','26','--output',BUILD/'dex',*sorted((BUILD/'classes').rglob('*.class')))
@@ -33,7 +41,7 @@ if not key.exists():
     run('keytool','-genkeypair','-keystore',key,'-storetype','PKCS12','-alias','pocket-aces','-storepass:file',password,'-keypass:file',password,'-keyalg','RSA','-keysize','3072','-validity','10000','-dname','CN=Pocket Aces, OU=Nicole, O=Personal App, C=GB')
     key.chmod(0o600)
 if not password.exists():raise SystemExit('Restore the private signing password before building an update.')
-downloads=ROOT/'downloads';downloads.mkdir(exist_ok=True);apk=downloads/'Pocket-Aces-0.3.1.apk'
+downloads=ROOT/'downloads';downloads.mkdir(exist_ok=True);apk=downloads/'Pocket-Aces-0.3.2.apk'
 run(TOOLS/'apksigner','sign','--ks',key,'--ks-key-alias','pocket-aces','--ks-pass','file:'+str(password),'--out',apk,BUILD/'aligned.apk')
 run(TOOLS/'apksigner','verify','--verbose',apk)
-print(json.dumps({'apk':str(apk),'bytes':apk.stat().st_size,'version':'0.3.1'}))
+print(json.dumps({'apk':str(apk),'bytes':apk.stat().st_size,'version':'0.3.2'}))

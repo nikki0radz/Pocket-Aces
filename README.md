@@ -10,7 +10,7 @@ pause/stop controls and a running story. No OpenAI account or screen sharing is
 needed for practice. It never pretends to analyse a real stream.
 
 For a real stream, start **Share a game with Pip**. Desktop Chrome/Edge can share
-a video tab, including its audio when available. The [Android test APK](https://pocket-aces.nikki0radz.chatgpt.site/downloads/Pocket-Aces-0.3.1.apk) adds Android's explicit app-sharing permission and a draggable Pip
+a video tab, including its audio when available. The [Android test APK](https://pocket-aces.nikki0radz.chatgpt.site/downloads/Pocket-Aces-0.3.2.apk) adds Android's explicit app-sharing permission and a draggable Pip
 overlay, with pause/stop buttons and a foreground notification. It shares pictures
 only in this first Android prototype; broadcast audio transcription is supported
 in desktop browsers when the selected source provides audio. Protected video or
@@ -42,7 +42,28 @@ The Android build uses the system Save file picker for JSON exports; the browser
 uses a normal download. Cancelling export retains every note. Turning off Design
 mode restores the page and any practice game that it paused. The release is
 signed with the original Pocket Aces certificate so it can update the first APK.
-The APK loads the hosted app; it needs a connection for initial sign-in and load.
+From 0.3.2, the APK bundles the learning pages and opens directly without Google
+or ChatGPT sign-in. The hosted website keeps its existing private access.
+
+## Direct-open Android app (0.3.2)
+
+Lessons, dictionary, collection, Follow a table, the authored practice game,
+Triton screenshot guide and Design mode are included inside the APK. Opening the
+app, saving notes and exporting JSON need no online account. The Android screen
+lock remains the device's protection; this release does not add a fingerprint
+prompt or change Google/ChatGPT account settings.
+
+Local pages use the reserved HTTPS app-assets origin, exact-path allowlisting,
+and the same origin-targeted native port. Unknown local assets never fall through
+to network requests. External links open in the normal browser, where existing
+sessions and available passkeys can be used. No authentication tokens are copied.
+The local live-AI status is explicitly disconnected: connecting the private AI
+backend from the standalone app remains separate work. No API credentials are
+embedded. Website access and the server's identity checks are unchanged.
+
+Updates to the bundled pages require a new APK. Existing website/browser progress
+does not automatically transfer to the app's new local origin. Future app updates
+keep this origin so locally saved progress and design notes can persist.
 
 ## Interactive Triton screenshot
 
@@ -97,9 +118,10 @@ private server at https://pocket-aces.nikki0radz.chatgpt.site, not static Pages.
 ## Android test build
 
 Set `ANDROID_JAR` and `ANDROID_BUILD_TOOLS` to official Android SDK 35 paths, then
-run `python3 scripts/build-android.py`. It produces `downloads/Pocket-Aces-0.3.1.apk`.
-The app targets Android 15, supports Android 8+, and loads the same private hosted
-app, including its normal sign-in. Screen sharing needs its OpenAI connection.
+run `python3 scripts/build-android.py`. It produces `downloads/Pocket-Aces-0.3.2.apk`.
+The app targets Android 15, supports Android 8+, and opens the bundled app without
+sign-in. The shared `scripts/app-assets.json` defines the hosted and native files.
+Screen sharing needs a separately configured OpenAI connection.
 
 The native bridge uses an origin-targeted WebMessagePort to the trusted main page,
 not a JavaScript interface exposed to embedded video frames. No API keys are in
@@ -107,7 +129,9 @@ the APK. Android capture is a foreground service with explicit projection consen
 no restart on kill, no saved media, and an independent 30-minute stop. Signing
 material is ignored by Git and backed up privately; retain it for installable
 updates. Build/signature checks do not establish real-device behaviour. Test the
-sign-in, overlay permission, YouTube capture and background callbacks on a phone.
+first launch, JSON export, overlay permission, YouTube playback and background
+callbacks on a phone. Automated checks cover bundle completeness and native
+origin/path isolation, but no Android emulator or physical device was available.
 
 ## Existing learning app
 

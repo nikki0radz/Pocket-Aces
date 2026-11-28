@@ -1,4 +1,4 @@
-const CACHE='pocket-aces-v6-design-notes';
+const CACHE='pocket-aces-v7-offline-app';
 const ASSETS=['./','./index.html','./styles.css','./app.js','./data.js','./engine.js','./collection.js','./spectator.js','./spectator.css','./watch.js','./watch-core.js','./watch.css','./triton.js','./triton-hand.js','./triton.css','./design-review.js','./design-notes.js','./design-review.css','./assets/triton-owen-hand.jpg','./assets/pip-cat-expressions.png','./assets/icon.svg','./manifest.webmanifest'];
 self.addEventListener('install',event=>{event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(ASSETS)));self.skipWaiting();});
 self.addEventListener('activate',event=>{event.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k.startsWith('pocket-aces-')&&k!==CACHE).map(k=>caches.delete(k)))).then(()=>self.clients.claim()));});
